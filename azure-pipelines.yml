@@ -86,11 +86,6 @@ stages:
   - job: CopyFilesOverSSHtoProduction
     dependsOn: waitForValidation
     steps:
-    - task: DownloadPipelineArtifact@2
-      inputs:
-        buildType: 'current'
-        artifactName: 'trainSchedule.zip'
-        targetPath: '$(Pipeline.Workspace)/dist/'
     - task: CopyFilesOverSSH@0
       inputs:
         sshEndpoint: 'production-server'
@@ -102,5 +97,9 @@ stages:
       inputs:
         sshEndpoint: 'production-server'
         runOptions: 'inline'
-        inline: 'sudo /usr/bin/systemctl stop train-schedule && rm -rf /opt/train-schedule/* && unzip /tmp/trainSchedule.zip -d /opt/train-schedule && sudo /usr/bin/systemctl start train-schedule'
+        inline: |
+          sudo docker pull dafespinelsa/train-schedule:$(Build.BuildId) 
+          sudo docker stop train-schedule 
+          sudo docker rm train-schedule 
+          sudo docker run --restart always --name train-schedule -p 3000:3000 -d dafespinelsa/train-schedule:$(Build.BuildId) 
         readyTimeout: '20000'
