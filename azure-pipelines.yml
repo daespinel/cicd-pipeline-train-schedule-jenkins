@@ -38,7 +38,7 @@ stages:
       displayName: 'Building and Pushing Docker Image' 
       inputs:
         containerRegistry: 'docker-registry'
-        repository: 'train-schedule'
+        repository: 'dafespinelsa/train-schedule'
         command: 'buildAndPush'
         Dockerfile: '**/Dockerfile'
   
