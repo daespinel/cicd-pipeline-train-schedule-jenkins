@@ -86,13 +86,6 @@ stages:
   - job: CopyFilesOverSSHtoProduction
     dependsOn: waitForValidation
     steps:
-    - task: CopyFilesOverSSH@0
-      inputs:
-        sshEndpoint: 'production-server'
-        sourceFolder: '$(Pipeline.Workspace)/dist/'
-        contents: 'trainSchedule.zip'
-        targetFolder: '/tmp'
-        readyTimeout: '20000'
     - task: SSH@0
       inputs:
         sshEndpoint: 'production-server'
