@@ -32,6 +32,7 @@ stages:
         artifact: 'trainSchedule.zip'
         publishLocation: 'pipeline'
   - job: BuildDockerImage
+    dependsOn: BuildGradleProject
     steps:
     - task: Docker@2
       displayName: 'Building and Pushing Docker Image' 
