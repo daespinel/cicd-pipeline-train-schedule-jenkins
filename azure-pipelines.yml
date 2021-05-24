@@ -51,6 +51,7 @@ stages:
           targetType: 'inline'
           script: |
             echo "Using the environment connection $env:SSH_CONNECTION"
+            echo "ls -alh"
       env:
         SSH_CONNECTION: $(id_rsa.pub)
         
