@@ -57,17 +57,11 @@ stages:
 - stage: Staging
   jobs:
   - job: DeployingDockerSSHtoStaging
+    variables:
+      DOCKER_IMAGE_NAME: dafespinelsa/train-schedule
+      BUILD_NUMBER: $(Build.BuildId)
     steps:
-    - task: SSH@0
-      inputs:
-        sshEndpoint: 'staging-server'
-        runOptions: 'inline'
-        inline: |
-          sudo docker pull dafespinelsa/train-schedule:$(Build.BuildId) 
-          sudo docker stop train-schedule 
-          sudo docker rm train-schedule 
-          sudo docker run --restart always --name train-schedule -p 3000:3000 -d dafespinelsa/train-schedule:$(Build.BuildId) 
-        readyTimeout: '20000'
+
     - task: Kubernetes@1
       inputs:
         connectionType: 'Kubernetes Service Connection'
