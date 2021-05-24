@@ -74,8 +74,6 @@ stages:
         secretType: 'dockerRegistry'
         containerRegistryType: 'Container Registry'
         dockerRegistryEndpoint: 'docker-registry'
-        configMapName: 'my-config'
-        configMapArguments: '--from-literal=DOCKER_IMAGE_NAME=$(docker_image),BUILD_NUMBER=$(build_number)'
 
 - stage: Production
   jobs:
