@@ -64,7 +64,7 @@ stages:
       inputs:
         connectionType: 'Kubernetes Service Connection'
         kubernetesServiceEndpoint: 'kube-config-stage'
-        command: 'create'
+        command: 'apply'
         useConfigurationFile: true
         configuration: '$(Build.SourcesDirectory)/train-kube-azure.yml'
         secretType: 'dockerRegistry'
