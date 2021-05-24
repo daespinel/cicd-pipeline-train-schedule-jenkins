@@ -68,6 +68,13 @@ stages:
           sudo docker rm train-schedule 
           sudo docker run --restart always --name train-schedule -p 3000:3000 -d dafespinelsa/train-schedule:$(Build.BuildId) 
         readyTimeout: '20000'
+    - task: Kubernetes@1
+      inputs:
+        connectionType: 'Kubernetes Service Connection'
+        command: 
+        secretType: 'dockerRegistry'
+        containerRegistryType: 'Container Registry'
+        dockerRegistryEndpoint: 'docker-registry'
 
 - stage: Production
   jobs:
