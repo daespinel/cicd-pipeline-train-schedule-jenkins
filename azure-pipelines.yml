@@ -68,7 +68,7 @@ stages:
         kubernetesServiceEndpoint: 'kube-config-stage'
         command: 'create'
         useConfigurationFile: true
-        configuration: 'train-kube-azure.yml'
+        configuration: '$(Build.SourcesDirectory)/train-kube-azure.yml'
         secretType: 'dockerRegistry'
         containerRegistryType: 'Container Registry'
         dockerRegistryEndpoint: 'docker-registry'
