@@ -71,6 +71,7 @@ stages:
         command: 'create'
         useConfigurationFile: true
         configuration: '$(Build.SourcesDirectory)/train-kube-azure.yml'
+        arguments: '--from-literal=DOCKER_IMAGE_NAME=$(docker_image),BUILD_NUMBER=$(build_number)'
         secretType: 'dockerRegistry'
         containerRegistryType: 'Container Registry'
         dockerRegistryEndpoint: 'docker-registry'
