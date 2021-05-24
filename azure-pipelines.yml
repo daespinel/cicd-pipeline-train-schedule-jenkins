@@ -71,7 +71,10 @@ stages:
     - task: Kubernetes@1
       inputs:
         connectionType: 'Kubernetes Service Connection'
-        command: 
+        kubernetesServiceEndpoint: 'kube-config-stage'
+        command: 'create'
+        useConfigurationFile: true
+        configuration: 'train-kube-azure.yml'
         secretType: 'dockerRegistry'
         containerRegistryType: 'Container Registry'
         dockerRegistryEndpoint: 'docker-registry'
