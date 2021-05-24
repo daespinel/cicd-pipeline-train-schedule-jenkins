@@ -10,7 +10,7 @@ pool:
 stages:
 - stage: Build
   jobs:
-  - job: Build
+  - job: BuildGradleProject
     steps:
     - task: Gradle@2
       inputs:
@@ -23,16 +23,24 @@ stages:
         publishJUnitResults: true
         testResultsFiles: '**/TEST-*.xml'
         tasks: 'build'
-
     - task: CmdLine@2
       inputs:
         script: ls -alh dist/
-  
     - task: PublishPipelineArtifact@1
       inputs:
         targetPath: '$(Build.SourcesDirectory)/dist/trainSchedule.zip'
         artifact: 'trainSchedule.zip'
         publishLocation: 'pipeline'
+  - job: BuildDockerImage
+    dependsOn: BuildGradleProject
+    steps:
+    - task: Docker@2
+      displayName: 'Building and Pushing Docker Image' 
+      inputs:
+        containerRegistry: 'docker-registry'
+        repository: 'dafespinelsa/train-schedule'
+        command: 'buildAndPush'
+        Dockerfile: '**/Dockerfile'
   
 - stage: Test
   jobs:
@@ -43,31 +51,29 @@ stages:
           targetType: 'inline'
           script: |
             echo "Using the environment connection $env:SSH_CONNECTION"
+            ls -alh
       env:
         SSH_CONNECTION: $(id_rsa.pub)
         
 - stage: Staging
   jobs:
-  - job: CopyFilesOverSSHtoStaging
+  - job: DeployingDockerSSHtoStaging
+    variables:
+      DOCKER_IMAGE_NAME: dafespinelsa/train-schedule
+#      BUILD_NUMBER: $(Build.BuildId)
+      BUIL_NUMBER: 75
     steps:
-    - task: DownloadPipelineArtifact@2
+
+    - task: Kubernetes@1
       inputs:
-        buildType: 'current'
-        artifactName: 'trainSchedule.zip'
-        targetPath: '$(Pipeline.Workspace)/dist/'
-    - task: CopyFilesOverSSH@0
-      inputs:
-        sshEndpoint: 'staging-server'
-        sourceFolder: '$(Pipeline.Workspace)/dist/'
-        contents: 'trainSchedule.zip'
-        targetFolder: '/tmp'
-        readyTimeout: '20000'
-    - task: SSH@0
-      inputs:
-        sshEndpoint: 'staging-server'
-        runOptions: 'inline'
-        inline: 'sudo /usr/bin/systemctl stop train-schedule && rm -rf /opt/train-schedule/* && unzip /tmp/trainSchedule.zip -d /opt/train-schedule && sudo /usr/bin/systemctl start train-schedule'
-        readyTimeout: '20000'
+        connectionType: 'Kubernetes Service Connection'
+        kubernetesServiceEndpoint: 'kube-config-stage'
+        command: 'create'
+        useConfigurationFile: true
+        configuration: '$(Build.SourcesDirectory)/train-kube-azure.yml'
+        secretType: 'dockerRegistry'
+        containerRegistryType: 'Container Registry'
+        dockerRegistryEndpoint: 'docker-registry'
 
 - stage: Production
   jobs:
@@ -86,21 +92,13 @@ stages:
   - job: CopyFilesOverSSHtoProduction
     dependsOn: waitForValidation
     steps:
-    - task: DownloadPipelineArtifact@2
-      inputs:
-        buildType: 'current'
-        artifactName: 'trainSchedule.zip'
-        targetPath: '$(Pipeline.Workspace)/dist/'
-    - task: CopyFilesOverSSH@0
-      inputs:
-        sshEndpoint: 'production-server'
-        sourceFolder: '$(Pipeline.Workspace)/dist/'
-        contents: 'trainSchedule.zip'
-        targetFolder: '/tmp'
-        readyTimeout: '20000'
     - task: SSH@0
       inputs:
         sshEndpoint: 'production-server'
         runOptions: 'inline'
-        inline: 'sudo /usr/bin/systemctl stop train-schedule && rm -rf /opt/train-schedule/* && unzip /tmp/trainSchedule.zip -d /opt/train-schedule && sudo /usr/bin/systemctl start train-schedule'
+        inline: |
+          sudo docker pull dafespinelsa/train-schedule:$(Build.BuildId) 
+          sudo docker stop train-schedule 
+          sudo docker rm train-schedule 
+          sudo docker run --restart always --name train-schedule -p 3000:3000 -d dafespinelsa/train-schedule:$(Build.BuildId) 
         readyTimeout: '20000'
