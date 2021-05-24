@@ -121,16 +121,52 @@ stages:
         instructions: 'Please validate the build configuration and resume'
         onTimeout: 'resume'
   
-  - job: CopyFilesOverSSHtoProduction
+  - job: DeployK8StoProduction
     dependsOn: waitForValidation
     steps:
-    - task: SSH@0
+    - task: Kubernetes@1
       inputs:
-        sshEndpoint: 'production-server'
-        runOptions: 'inline'
+        connectionType: 'Kubernetes Service Connection'
+        kubernetesServiceEndpoint: 'kube-config-prod'
+        command: 'apply'
+        useConfigurationFile: true
+        configurationType: 'inline'
         inline: |
-          sudo docker pull dafespinelsa/train-schedule:$(Build.BuildId) 
-          sudo docker stop train-schedule 
-          sudo docker rm train-schedule 
-          sudo docker run --restart always --name train-schedule -p 3000:3000 -d dafespinelsa/train-schedule:$(Build.BuildId) 
-        readyTimeout: '20000'
+          apiVersion: apps/v1
+          kind: Deployment
+          metadata:
+            name: train-schedule-deployment
+            labels:
+              apps: train-schedule
+          spec:
+            replicas: 2
+            selector:
+              matchLabels:
+                app: train-schedule
+            template:
+              metadata:
+                labels:
+                  app: train-schedule
+              spec:
+                containers:
+                - name: train-schedule
+                  image: dafespinelsa/train-schedule:$(Build.BuildId)
+                  ports:
+                  - containerPort: 3000
+          
+          ---
+          apiVersion: v1
+          kind: Service
+          metadata:
+            name: train-schedule-service
+          spec:
+            type: NodePort
+            selector:
+              app: train-schedule
+            ports:
+            - protocol: TCP
+              port: 3000
+              nodePort: 8080
+        secretType: 'dockerRegistry'
+        containerRegistryType: 'Container Registry'
+        dockerRegistryEndpoint: 'docker-registry'
