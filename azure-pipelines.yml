@@ -58,10 +58,6 @@ stages:
 - stage: Staging
   jobs:
   - job: DeployingDockerSSHtoStaging
-    variables:
-      DOCKER_IMAGE_NAME: dafespinelsa/train-schedule
-#      BUILD_NUMBER: $(Build.BuildId)
-      BUIL_NUMBER: 75
     steps:
 
     - task: Kubernetes@1
@@ -74,6 +70,10 @@ stages:
         secretType: 'dockerRegistry'
         containerRegistryType: 'Container Registry'
         dockerRegistryEndpoint: 'docker-registry'
+      env:
+        DOCKER_IMAGE_NAME: dafespinelsa/train-schedule
+#      BUILD_NUMBER: $(Build.BuildId)
+        BUILD_NUMBER: 75
 
 - stage: Production
   jobs:
