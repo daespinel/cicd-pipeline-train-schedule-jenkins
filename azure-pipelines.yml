@@ -60,7 +60,8 @@ stages:
   - job: DeployingDockerSSHtoStaging
     variables:
       DOCKER_IMAGE_NAME: dafespinelsa/train-schedule
-      BUILD_NUMBER: $(Build.BuildId)
+#      BUILD_NUMBER: $(Build.BuildId)
+      BUIL_NUMBER: 75
     steps:
 
     - task: Kubernetes@1
